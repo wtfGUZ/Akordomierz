@@ -8,25 +8,31 @@ export function initVisualizer(canvasElement) {
   canvas = canvasElement;
   ctx = canvas.getContext('2d');
   
-  // Handle resize and High DPI screens
-  const resize = () => {
-    const dpr = window.devicePixelRatio || 1;
-    const rect = canvas.parentElement.getBoundingClientRect();
-    
-    // Set actual size in memory (scaled to account for extra pixel density)
-    canvas.width = rect.width * dpr;
-    canvas.height = rect.height * dpr;
-    
-    // Normalize coordinate system to use css pixels
-    ctx.scale(dpr, dpr);
-    
-    // Logical width and height for our drawing math
-    width = rect.width;
-    height = rect.height;
-  };
+  // Use ResizeObserver to reliably detect when CSS is applied and element size changes
+  const resizeObserver = new ResizeObserver(entries => {
+    for (let entry of entries) {
+      const rect = entry.contentRect;
+      
+      // Ignore if element is not visible or not styled yet
+      if (rect.width === 0 || rect.height === 0) continue;
+      
+      const dpr = window.devicePixelRatio || 1;
+      
+      // Set actual size in memory
+      canvas.width = rect.width * dpr;
+      canvas.height = rect.height * dpr;
+      
+      // Reset transform matrix to prevent cumulative scaling on multiple resize events
+      ctx.setTransform(1, 0, 0, 1, 0, 0);
+      ctx.scale(dpr, dpr);
+      
+      // Logical width and height
+      width = rect.width;
+      height = rect.height;
+    }
+  });
   
-  window.addEventListener('resize', resize);
-  resize();
+  resizeObserver.observe(canvas.parentElement);
 
   // Start the animation loop
   draw();
