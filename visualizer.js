@@ -2,6 +2,7 @@ let canvas, ctx;
 let width, height;
 let animationId;
 let currentChroma = new Array(12).fill(0);
+let targetChroma = new Array(12).fill(0);
 
 export function initVisualizer(canvasElement) {
   canvas = canvasElement;
@@ -26,9 +27,9 @@ export function initVisualizer(canvasElement) {
 
 export function updateVisualizer(features) {
   if (features && features.chroma) {
-    // Smooth the update a bit
+    // Update target values when new data arrives (approx 10 times a second)
     for (let i = 0; i < 12; i++) {
-      currentChroma[i] = currentChroma[i] * 0.7 + features.chroma[i] * 0.3;
+      targetChroma[i] = features.chroma[i];
     }
   }
 }
@@ -45,6 +46,9 @@ function draw() {
   const angleStep = (Math.PI * 2) / numBars;
 
   for (let i = 0; i < numBars; i++) {
+    // Smoothly interpolate currentChroma towards targetChroma *every frame* (60+ Hz)
+    currentChroma[i] += (targetChroma[i] - currentChroma[i]) * 0.15;
+    
     const value = currentChroma[i] || 0;
     // Base radius + additional length based on chroma value
     const barLength = 10 + (value * radius * 0.8);
