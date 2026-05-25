@@ -8,31 +8,19 @@ export function initVisualizer(canvasElement) {
   canvas = canvasElement;
   ctx = canvas.getContext('2d');
   
-  // Use ResizeObserver to reliably detect when CSS is applied and element size changes
-  const resizeObserver = new ResizeObserver(entries => {
-    for (let entry of entries) {
-      const rect = entry.contentRect;
-      
-      // Ignore if element is not visible or not styled yet
-      if (rect.width === 0 || rect.height === 0) continue;
-      
-      const dpr = window.devicePixelRatio || 1;
-      
-      // Set actual size in memory
-      canvas.width = rect.width * dpr;
-      canvas.height = rect.height * dpr;
-      
-      // Reset transform matrix to prevent cumulative scaling on multiple resize events
-      ctx.setTransform(1, 0, 0, 1, 0, 0);
-      ctx.scale(dpr, dpr);
-      
-      // Logical width and height
-      width = rect.width;
-      height = rect.height;
-    }
-  });
+  // The container is strictly 250x250px in CSS. 
+  // We hardcode the logical size to prevent any layout shifting or resize loops.
+  const logicalSize = 250;
+  const dpr = window.devicePixelRatio || 1;
   
-  resizeObserver.observe(canvas.parentElement);
+  canvas.width = logicalSize * dpr;
+  canvas.height = logicalSize * dpr;
+  
+  ctx.setTransform(1, 0, 0, 1, 0, 0);
+  ctx.scale(dpr, dpr);
+  
+  width = logicalSize;
+  height = logicalSize;
 
   // Start the animation loop
   draw();
