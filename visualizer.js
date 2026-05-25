@@ -8,14 +8,21 @@ export function initVisualizer(canvasElement) {
   canvas = canvasElement;
   ctx = canvas.getContext('2d');
   
-  // Handle resize
+  // Handle resize and High DPI screens
   const resize = () => {
-    // Match the canvas rendering resolution to its CSS size
+    const dpr = window.devicePixelRatio || 1;
     const rect = canvas.parentElement.getBoundingClientRect();
-    canvas.width = rect.width;
-    canvas.height = rect.height;
-    width = canvas.width;
-    height = canvas.height;
+    
+    // Set actual size in memory (scaled to account for extra pixel density)
+    canvas.width = rect.width * dpr;
+    canvas.height = rect.height * dpr;
+    
+    // Normalize coordinate system to use css pixels
+    ctx.scale(dpr, dpr);
+    
+    // Logical width and height for our drawing math
+    width = rect.width;
+    height = rect.height;
   };
   
   window.addEventListener('resize', resize);
@@ -89,4 +96,5 @@ export function stopVisualizer() {
   }
   // Reset chroma
   currentChroma = new Array(12).fill(0);
+  targetChroma = new Array(12).fill(0);
 }
